@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "chatgpt-telegram-bot"
+version = "0.1.0"
+description = ""
+authors = ["Levon Gegamyan <levongeg@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "chatgpt_telegram_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^0.26.5"
+python-dotenv = "^0.21.1"
+python-telegram-bot = "13.7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
