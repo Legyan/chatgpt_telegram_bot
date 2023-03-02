@@ -29,15 +29,13 @@ logging.basicConfig(
 def get_answer_from_chatgpt(message, name):
     openai.api_key = os.getenv("OPENAI_API_KEY")
     logging.info('Отправлен запрос в OpenAI')
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=name + ' ' + message,
-        max_tokens=1024,
-        n=1,
-        stop=None,
-        temperature=0.6,
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": 'user', "content": name + ' пишет:\n' + message},
+        ]
     )
-    text_response = response['choices'][0]['text'].strip()
+    text_response = response['choices'][0]['message']['content'].strip()
     logging.info(f'Получен ответ от OpenAI:\n{text_response}')
     return text_response
 
@@ -46,6 +44,8 @@ def chat_with_chatgpt(update, context):
     chat = update.effective_chat
     name = update.message.chat.first_name
     message = update.message.text
+    if not message:
+        return
     logging.info(name + ' написал\n' + message)
     try:
         gpt_response = get_answer_from_chatgpt(message, name)
@@ -76,7 +76,9 @@ def wake_up(update, context):
     """Обработчик поступившей команды /start."""
     chat = update.effective_chat
     name = update.message.chat.first_name
-    button = ReplyKeyboardMarkup([['ChatGPT, что ты умеешь?']], resize_keyboard=True)
+    button = ReplyKeyboardMarkup(
+        [['ChatGPT, что ты умеешь?']], resize_keyboard=True
+        )
 
     context.bot.send_message(
         chat_id=chat.id,
@@ -91,7 +93,9 @@ def main():
     updater.dispatcher.add_handler(MessageHandler(
         Filters.regex('ChatGPT, что ты умеешь?'), possibilities)
     )
-    updater.dispatcher.add_handler(MessageHandler(Filters.text, chat_with_chatgpt))
+    updater.dispatcher.add_handler(
+        MessageHandler(Filters.text, chat_with_chatgpt)
+        )
     updater.start_polling()
     updater.idle()
 
