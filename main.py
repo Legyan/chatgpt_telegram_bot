@@ -49,10 +49,12 @@ def chat_with_chatgpt(update, context):
     logging.info(name + ' написал\n' + message)
     try:
         gpt_response = get_answer_from_chatgpt(message, name)
+        context.bot.send_message(chat_id=chat.id, text=gpt_response)
     except Exception:
         logging.info('Запрос к OpenAI не получил ответа.')
-        return
-    context.bot.send_message(chat_id=chat.id, text=gpt_response)
+        context.bot.send_message(
+            chat_id=chat.id,
+            text='Запрос к OpenAI не получил ответа, попробуйте позже.')
 
 
 def possibilities(update, context):
@@ -62,14 +64,16 @@ def possibilities(update, context):
     button = ReplyKeyboardRemove()
     try:
         gpt_response = get_answer_from_chatgpt(message, name)
+        context.bot.send_message(
+            chat_id=chat.id,
+            text=gpt_response,
+            reply_markup=button
+    )
     except Exception:
         logging.info('Запрос к OpenAI не получил ответа.')
-        return
-    context.bot.send_message(
-        chat_id=chat.id,
-        text=gpt_response,
-        reply_markup=button
-    )
+        context.bot.send_message(
+            chat_id=chat.id,
+            text='Запрос к OpenAI не получил ответа, попробуйте позже.')
 
 
 def wake_up(update, context):
