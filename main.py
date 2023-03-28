@@ -1,5 +1,7 @@
 import logging.handlers
 import os
+import threading
+import time
 from pathlib import Path
 
 import openai
@@ -30,7 +32,7 @@ def get_answer_from_chatgpt(message, name):
     openai.api_key = os.getenv("OPENAI_API_KEY")
     logging.info('Отправлен запрос в OpenAI')
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=[
             {"role": 'user', "content": name + ' пишет:\n' + message},
         ]
@@ -91,7 +93,16 @@ def wake_up(update, context):
     )
 
 
+def periodic_activity():
+    while True:
+        logging.info('Keep-alive message')
+        time.sleep(3600)
+
+
 def main():
+    t = threading.Thread(target=periodic_activity)
+    t.start()
+
     updater = Updater(token=secret_token)
     updater.dispatcher.add_handler(CommandHandler('start', wake_up))
     updater.dispatcher.add_handler(MessageHandler(
