@@ -12,6 +12,8 @@ python = "^3.10"
 python-dotenv = "^0.21.1"
 python-telegram-bot = "13.7"
 openai = "^0.27.0"
+aiogram = "3.0.0b7"
+aiogram-media-group = "^0.5.1"
 
 
 [tool.poetry.group.dev.dependencies]
