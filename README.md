@@ -6,7 +6,7 @@
 ## Стек технологий 
 
 ![](https://img.shields.io/badge/Python-3.10-black?style=flat&logo=python) 
-![](https://img.shields.io/badge/python_telegram_bot-13.7-black?style=flat&logo=telegram)
+![](https://img.shields.io/badge/aiogram-3.0.0b7-black?style=flat&logo=telegram)
 ![](https://img.shields.io/badge/Openai-0.27.0-black?style=flat&logo=openai)
 
 ## Запуск проекта
@@ -34,6 +34,7 @@ touch .env && nano .env
 ```
 
 ```
+ADMINS_ACCOUNTS=<FIRST_ADMIN_ID>,<FIRST_ADMIN_NAME>;<SECOND_ADMIN_ID>,<SECOND_ADMIN_NAME>
 BOT_TOKEN=<YOUR_BOT_TOKEN>
 OPENAI_API_KEY=<YOUR_OPENAPI_KEY>
 ```

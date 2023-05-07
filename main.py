@@ -1,7 +1,8 @@
 import asyncio
-import logging
 
-from config import bot, rotating_handler
+from aiogram.utils.chat_action import ChatActionMiddleware
+
+from config import bot
 from handlers import dp
 
 
@@ -10,10 +11,5 @@ async def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(
-        format='%(asctime)s :: %(name)s:%(lineno)s :: '
-               '%(levelname)s :: %(message)s',
-        level=logging.INFO,
-        handlers=(rotating_handler, logging.StreamHandler())
-    )
+    dp.message.middleware(ChatActionMiddleware())
     asyncio.run(main())
