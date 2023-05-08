@@ -1,10 +1,9 @@
+import logging.handlers
 import os
 from pathlib import Path
-import logging.handlers
 
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
-
 
 log_dir = Path(__file__).parent / 'logs'
 log_dir.mkdir(exist_ok=True)
