@@ -1,10 +1,13 @@
 import logging
+from typing import Union
 
-from aiogram import Router, flags
+from aiogram import F, Router, flags
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
 from prettytable import PrettyTable
 
+import kb
 from config import dp
 from constants import (COMMAND_ERROR, HELP_TEXT, INVALID_COMMAND_FROM,
                        NOT_IN_WHITELIST)
@@ -12,6 +15,7 @@ from db import (add_user, del_user, get_all_users_tokens, get_user_tokens,
                 is_user_in_whitelist, reset_all_users_tokens,
                 reset_user_tokens, set_admin, update_tokens)
 from openai_requests import generate_text_chatgpt4
+from states import Gen
 
 admins_router = Router()
 whitelist_users_router = Router()
@@ -22,23 +26,74 @@ async def start_handler(msg: Message):
     await msg.answer(
         f'Привет {msg.from_user.username}! '
         'Этот бот позволяет общаться с ChatGPT 4 через API OPENAI. '
-        'Напишите что нибудь и бот пришлёт вам ответ от ChatGPT.'
+        'Напишите что нибудь и бот пришлёт вам ответ от ChatGPT.',
+        reply_markup=kb.menu
     )
 
 
+@dp.callback_query(F.data == 'help')
 @dp.message(Command('help'))
-async def help_message(message: Message):
-    await message.reply(HELP_TEXT)
+async def get_tokens_callback(input_obj: Union[CallbackQuery, Message]):
+    if isinstance(input_obj, CallbackQuery):
+        await input_obj.message.answer(HELP_TEXT)
+    else:
+        await input_obj.answer(HELP_TEXT)
 
 
+@dp.message(F.text == 'Меню')
+@dp.message(Command('menu'))
+async def menu(msg: Message):
+    await msg.answer('Главное меню', reply_markup=kb.menu)
+
+
+@whitelist_users_router.callback_query(F.data == 'my_tokens')
 @whitelist_users_router.message(Command('my_tokens'))
-async def get_my_tokens_handler(msg: Message):
+async def help_callback(input_obj: Union[CallbackQuery, Message]):
     try:
-        tokens = get_user_tokens(msg.from_user.id)
-        await msg.answer(f'Вы использовали {tokens} токенов.')
+        tokens = get_user_tokens(input_obj.from_user.id)
+        answer = f'Вы использовали {tokens} токенов.'
     except Exception as error:
         logging.error(error)
-        await msg.answer(COMMAND_ERROR)
+        answer = COMMAND_ERROR
+    if isinstance(input_obj, CallbackQuery):
+        await input_obj.message.answer(answer, reply_markup=kb.exit_kb)
+    else:
+        await input_obj.answer(answer, reply_markup=kb.exit_kb)
+
+
+@whitelist_users_router.callback_query(F.data == 'generate_text')
+async def input_text_prompt(clbck: CallbackQuery, state: FSMContext):
+    await state.set_state(Gen.text_prompt)
+    await clbck.message.edit_text('Введите ваш запрос к ChatGPT:')
+
+
+@whitelist_users_router.message(Gen.text_prompt)
+@flags.chat_action('typing')
+async def generate_text(msg: Message):
+    mesg = await msg.reply('Ожидание ответа от ChatGPT.')
+    name = msg.from_user.username
+    message = msg.text
+    try:
+        gpt_response, tokens = await generate_text_chatgpt4(message, name)
+        update_tokens(msg.from_user.id, tokens)
+        await mesg.edit_text(gpt_response, disable_web_page_preview=True)
+    except Exception as error:
+        logging.error(error)
+        await msg.edit_text(COMMAND_ERROR, reply_markup=kb.iexit_kb)
+
+
+@whitelist_users_router.callback_query(F.data == 'generate_image')
+async def input_image_prompt(clbck: CallbackQuery, state: FSMContext):
+    await state.set_state(Gen.img_prompt)
+    await clbck.message.edit_text('Введите ваш запрос к DALLE:')
+
+
+@whitelist_users_router.message(Gen.img_prompt)
+@flags.chat_action('upload_photo')
+async def generate_image(msg: Message):
+    await msg.reply(
+        'Генерация изображений временно недоступна, попробуйте позже.'
+    )
 
 
 @admins_router.message(Command('add_user'))
@@ -201,7 +256,7 @@ async def all_users_handler(msg: Message):
             x.add_row(user)
         await msg.answer(
             '```\n' +
-            x.get_string(fields=['id', 'name', 'tokens']) +
+            x.get_string(fields=['name', 'tokens']) +
             '\n```',
             parse_mode='MarkdownV2'
         )
@@ -218,7 +273,7 @@ async def message_handler(msg: Message):
     try:
         gpt_response, tokens = await generate_text_chatgpt4(message, name)
         update_tokens(msg.from_user.id, tokens)
-        await msg.answer(gpt_response)
+        await msg.reply(gpt_response)
     except Exception as error:
         logging.error(error)
-        await msg.answer(COMMAND_ERROR)
+        await msg.reply(COMMAND_ERROR)
