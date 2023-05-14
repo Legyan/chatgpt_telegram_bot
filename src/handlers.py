@@ -11,9 +11,10 @@ import kb
 import text
 from config import dp
 from db import (add_user, del_user, get_all_users_tokens,
-                get_user_tokens_and_images, is_user_in_whitelist,
-                reset_all_users_tokens, reset_user_tokens, set_admin,
-                update_image_count, update_tokens)
+                get_user_tokens_and_images, is_admin_user,
+                is_user_in_whitelist, reset_all_users_tokens,
+                reset_user_tokens, set_admin, update_image_count,
+                update_tokens)
 from openai_requests import generate_image_dalle, generate_text_chatgpt4
 from states import Gen
 
@@ -32,10 +33,14 @@ async def start_handler(msg: Message):
 @dp.callback_query(F.data == 'help')
 @dp.message(Command('help'))
 async def get_tokens_callback(input_obj: Union[CallbackQuery, Message]):
-    if isinstance(input_obj, CallbackQuery):
-        await input_obj.message.answer(text.HELP_TEXT)
+    if not is_admin_user(input_obj.from_user.id):
+        answer = text.HELP_TEXT
     else:
-        await input_obj.answer(text.HELP_TEXT)
+        answer = text.ADMIN_HELP_TEXT
+    if isinstance(input_obj, CallbackQuery):
+        await input_obj.message.answer(answer)
+    else:
+        await input_obj.answer(answer)
 
 
 @dp.message(F.text == 'Меню')

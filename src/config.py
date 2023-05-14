@@ -24,6 +24,7 @@ load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 OPENAI_KEY = os.getenv('OPENAI_API_KEY')
 ADMINS_ACCOUNTS = os.getenv('ADMINS_ACCOUNTS')
+ADMIN_NICKNAME = os.getenv('ADMIN_NICKNAME')
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
