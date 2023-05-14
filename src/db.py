@@ -4,20 +4,17 @@ from config import ADMINS_ACCOUNTS
 
 
 def create_database():
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
 
     c.execute(
         '''CREATE TABLE IF NOT EXISTS users (
            id INTEGER PRIMARY KEY,
-           name varchar(20),
+           name VARCHAR(20),
            tokens INTEGER,
-           is_admin bool
+           generated_images INTEGER,
+           is_admin BOOL
            )''')
-
-    add_column_if_not_exists(
-        c, "users", "generated_images", "INTEGER DEFAULT 0"
-    )
 
     for admin in ADMINS_ACCOUNTS.split(';'):
         user_id, name = admin.split(',')
@@ -41,7 +38,7 @@ def add_column_if_not_exists(
 
 
 def add_user(user_id, name, is_admin=False):
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute(
         'INSERT OR IGNORE INTO '
@@ -53,7 +50,7 @@ def add_user(user_id, name, is_admin=False):
 
 
 def set_admin(user_id, is_admin):
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute(
         'UPDATE users SET is_admin = ? WHERE id = ?', (is_admin, user_id)
@@ -63,7 +60,7 @@ def set_admin(user_id, is_admin):
 
 
 def del_user(user_id):
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute('DELETE FROM users WHERE id = ?', (user_id,))
     conn.commit()
@@ -71,7 +68,7 @@ def del_user(user_id):
 
 
 def update_tokens(user_id, tokens):
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute(
         'UPDATE users SET tokens = tokens + ? WHERE id = ?', (tokens, user_id)
@@ -81,7 +78,7 @@ def update_tokens(user_id, tokens):
 
 
 def update_image_count(user_id):
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute(
         'UPDATE users '
@@ -92,8 +89,8 @@ def update_image_count(user_id):
     conn.close()
 
 
-def get_user_tokens(user_id):
-    conn = sqlite3.connect('users_tokens.db')
+def get_user_tokens_and_images(user_id):
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute(
         'SELECT tokens, generated_images FROM users WHERE id = ?', (user_id,)
@@ -104,7 +101,7 @@ def get_user_tokens(user_id):
 
 
 def reset_user_tokens(user_id):
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute(
         'UPDATE users '
@@ -116,7 +113,7 @@ def reset_user_tokens(user_id):
 
 
 def reset_all_users_tokens():
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute('UPDATE users SET tokens = 0, generated_images = 0')
     conn.commit()
@@ -124,7 +121,7 @@ def reset_all_users_tokens():
 
 
 def get_all_users_tokens():
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute('SELECT id, name, tokens, generated_images, is_admin FROM users')
     users_tokens = c.fetchall()
@@ -133,7 +130,7 @@ def get_all_users_tokens():
 
 
 def is_user_in_whitelist(user_id):
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute('SELECT * FROM users WHERE id = ?', (user_id,))
     user = c.fetchone()
@@ -142,7 +139,7 @@ def is_user_in_whitelist(user_id):
 
 
 def is_admin_user(user_id):
-    conn = sqlite3.connect('users_tokens.db')
+    conn = sqlite3.connect('../users_tokens.db')
     c = conn.cursor()
     c.execute('SELECT * FROM users WHERE id = ? AND is_admin = 1', (user_id,))
     user = c.fetchone()

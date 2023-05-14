@@ -5,7 +5,7 @@ from pathlib import Path
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
 
-log_dir = Path(__file__).parent / 'logs'
+log_dir = Path(__file__).parent.parent / 'logs'
 log_dir.mkdir(exist_ok=True)
 log_file = log_dir / 'chat_gpt_bot.log'
 rotating_handler = logging.handlers.RotatingFileHandler(
