@@ -13,8 +13,9 @@ from constants import (COMMAND_ERROR, HELP_TEXT, INVALID_COMMAND_FROM,
                        NOT_IN_WHITELIST)
 from db import (add_user, del_user, get_all_users_tokens, get_user_tokens,
                 is_user_in_whitelist, reset_all_users_tokens,
-                reset_user_tokens, set_admin, update_tokens)
-from openai_requests import generate_text_chatgpt4
+                reset_user_tokens, set_admin, update_image_count,
+                update_tokens)
+from openai_requests import generate_image_dalle, generate_text_chatgpt4
 from states import Gen
 
 admins_router = Router()
@@ -51,7 +52,8 @@ async def menu(msg: Message):
 async def help_callback(input_obj: Union[CallbackQuery, Message]):
     try:
         tokens = get_user_tokens(input_obj.from_user.id)
-        answer = f'Вы использовали {tokens} токенов.'
+        answer = (f'Вы использовали {tokens[0]} токенов '
+                  f'и сгенерировали {tokens[1]} изображений.')
     except Exception as error:
         logging.error(error)
         answer = COMMAND_ERROR
@@ -91,9 +93,17 @@ async def input_image_prompt(clbck: CallbackQuery, state: FSMContext):
 @whitelist_users_router.message(Gen.img_prompt)
 @flags.chat_action('upload_photo')
 async def generate_image(msg: Message):
-    await msg.reply(
-        'Генерация изображений временно недоступна, попробуйте позже.'
-    )
+    mesg = await msg.reply('Ожидание ответа от DALLE.')
+    try:
+        img = await generate_image_dalle(msg.text)
+        update_image_count(msg.from_user.id)
+        await mesg.delete()
+        await msg.answer_photo(
+            photo=img[0], caption=f'Изображение по запросу "{msg.text}"'
+        )
+    except Exception as error:
+        logging.error(error)
+        await mesg.answer(COMMAND_ERROR)
 
 
 @admins_router.message(Command('add_user'))
@@ -251,12 +261,12 @@ async def all_users_handler(msg: Message):
     try:
         users_list = get_all_users_tokens()
         x = PrettyTable()
-        x.field_names = ['id', 'name', 'tokens', 'admin']
+        x.field_names = ['id', 'name', 'tokens', 'images', 'admin']
         for user in users_list:
             x.add_row(user)
         await msg.answer(
             '```\n' +
-            x.get_string(fields=['name', 'tokens']) +
+            x.get_string(fields=['name', 'tokens', 'images']) +
             '\n```',
             parse_mode='MarkdownV2'
         )

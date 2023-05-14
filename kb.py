@@ -12,7 +12,7 @@ menu = [
     ],
     [
         InlineKeyboardButton(
-            text='💸 потрачено токенов', callback_data='my_tokens'
+            text='💸 Потрачено токенов', callback_data='my_tokens'
         ),
         InlineKeyboardButton(
             text='🔎 Помощь', callback_data='help'
