@@ -26,13 +26,13 @@ whitelist_users_router = Router()
 async def start_handler(msg: Message):
     await msg.answer(
         text.HELLO_TEXT.format(name=msg.from_user.username),
-        reply_markup=kb.menu
+        reply_markup=kb.exit_kb
     )
 
 
 @dp.callback_query(F.data == 'help')
 @dp.message(Command('help'))
-async def get_tokens_callback(input_obj: Union[CallbackQuery, Message]):
+async def help_callback(input_obj: Union[CallbackQuery, Message]):
     if not is_admin_user(input_obj.from_user.id):
         answer = text.HELP_TEXT
     else:
@@ -52,7 +52,7 @@ async def menu(msg: Message):
 
 @whitelist_users_router.callback_query(F.data == 'my_tokens')
 @whitelist_users_router.message(Command('my_tokens'))
-async def help_callback(input_obj: Union[CallbackQuery, Message]):
+async def get_tokens_callback(input_obj: Union[CallbackQuery, Message]):
     try:
         tokens, images = get_user_tokens_and_images(input_obj.from_user.id)
         answer = (text.SPENT_TOKENS.format(tokens=tokens, images=images))
